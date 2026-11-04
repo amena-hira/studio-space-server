@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
 
 app.get("/studios/top-rated", async (req, res) => {
     try {
-        const topRatedStudios = await studioCollection.find().sort({ rating: -1 }).limit(5).toArray();
+        const topRatedStudios = await studioCollection.find().sort({ rating: -1 }).limit(6).toArray();
         res.json(topRatedStudios);
     } catch (err) {
         console.error(err);
@@ -52,6 +52,19 @@ app.get("/studios", async (req, res) => {
         res.status(500).json({ error: "An error occurred while fetching studios." });
     }
 });
+
+app.get("/studios/:id", async (req, res) => {
+    const { id } = req.params
+    try {
+        const studio = await studioCollection.findOne({ _id: new ObjectId(id) })
+        res.json(studio);
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ error: "An error occurred while fetching studios." });
+    }
+})
+
+
 
 app.get("/categories", async (req, res) => {
     try {
