@@ -58,7 +58,7 @@ const verifyToken = async (req, res, next) => {
 
 // bookings
 
-app.get("/bookings/user/:email", verifyToken, async (req, res) => {
+app.get("/api/bookings/user/:email", verifyToken, async (req, res) => {
     try {
         const { email } = req.params;
         const result = await bookingCollection.find({ userEmail: email })
@@ -70,7 +70,7 @@ app.get("/bookings/user/:email", verifyToken, async (req, res) => {
     }
 })
 
-app.patch("/bookings/:id", verifyToken, async (req, res) => {
+app.patch("/api/bookings/:id", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -110,7 +110,7 @@ app.patch("/bookings/:id", verifyToken, async (req, res) => {
     }
 });
 
-app.post("/bookings", verifyToken, async (req, res) => {
+app.post("/api/bookings", verifyToken, async (req, res) => {
     const data = req.body
     try {
         if (!data || Object.keys(data).length === 0) {
@@ -140,7 +140,7 @@ app.post("/bookings", verifyToken, async (req, res) => {
 
 // studios
 
-app.get("/studios/top-rated", async (req, res) => {
+app.get("/api/studios/top-rated", async (req, res) => {
     try {
         const topRatedStudios = await studioCollection.find().sort({ rating: -1 }).limit(6).toArray();
         res.json(topRatedStudios);
@@ -150,7 +150,7 @@ app.get("/studios/top-rated", async (req, res) => {
     }
 });
 
-app.get("/studios", async (req, res) => {
+app.get("/api/studios", async (req, res) => {
     try {
         const studios = await studioCollection.find().toArray();
         res.json(studios);
@@ -160,7 +160,7 @@ app.get("/studios", async (req, res) => {
     }
 });
 
-app.get("/studios/:id", async (req, res) => {
+app.get("/api/studios/:id", async (req, res) => {
     const { id } = req.params
     try {
         const studio = await studioCollection.findOne({ _id: new ObjectId(id) })
@@ -182,7 +182,7 @@ app.get("/studios/user/:email", verifyToken, async (req, res) => {
     }
 })
 
-app.post("/studios", verifyToken, async (req, res) => {
+app.post("/api/studios", verifyToken, async (req, res) => {
     const data = req.body
     try {
         if (!data || Object.keys(data).length === 0) {
@@ -199,7 +199,7 @@ app.post("/studios", verifyToken, async (req, res) => {
 
 })
 
-app.patch("/studios/:id", verifyToken, async (req, res) => {
+app.patch("/api/studios/:id", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
@@ -226,7 +226,7 @@ app.patch("/studios/:id", verifyToken, async (req, res) => {
     }
 })
 
-app.delete("/studios/:id", verifyToken, async (req, res) => {
+app.delete("/api/studios/:id", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -249,7 +249,7 @@ app.delete("/studios/:id", verifyToken, async (req, res) => {
 
 // categories
 
-app.get("/categories", async (req, res) => {
+app.get("/api/categories", async (req, res) => {
     try {
         const categories = await categoryCollection.find().toArray();
         res.json(categories);
