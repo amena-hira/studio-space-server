@@ -80,11 +80,11 @@ app.patch("/bookings/:id", verifyToken, async (req, res) => {
 
         const filter = {
             _id: new ObjectId(id),
-            status: { $nin: ["cancelled", "completed"] },
+            status: { $nin: ["Cancelled", "Completed"] },
         };
 
         const result = await bookingCollection.updateOne(filter, {
-            $set: { status: "cancelled" },
+            $set: { status: "Cancelled" },
         });
 
         if (result.matchedCount === 0) {
