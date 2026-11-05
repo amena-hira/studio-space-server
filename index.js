@@ -28,10 +28,27 @@ const mongoClient = await connectToMongoDB();
 const db = mongoClient.db("studio-space");
 const studioCollection = db.collection("studios");
 const categoryCollection = db.collection("categories");
+const bookingCollection = db.collection("bookings");
 
 app.get("/", (req, res) => {
     res.send("Hello from the server!");
 });
+
+app.post("/booking", async (req, res) => {
+    const data = req.body
+    try {
+        if (!data || Object.keys(data).length === 0) {
+            return res.status(400).send({ message: "Request body cannot be empty" });
+        }
+        const result = await bookingCollection.insertOne(data);
+        // console.log(result);
+        res.send(result);
+
+    } catch (error) {
+        console.error("Error inserting booking:", error);
+        res.status(500).send({ message: "Failed to insert booking", error: error.message });
+    }
+})
 
 app.get("/studios/top-rated", async (req, res) => {
     try {
