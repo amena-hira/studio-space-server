@@ -171,7 +171,7 @@ app.get("/api/studios/:id", async (req, res) => {
     }
 })
 
-app.get("/studios/user/:email", verifyToken, async (req, res) => {
+app.get("/api/studios/user/:email", verifyToken, async (req, res) => {
     try {
         const { email } = req.params;
         const result = await studioCollection.find({ userEmail: email }).toArray();
