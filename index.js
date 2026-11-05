@@ -34,11 +34,34 @@ app.get("/", (req, res) => {
     res.send("Hello from the server!");
 });
 
+app.get("/bookings/:email", async (req, res) => {
+    try {
+        const { email } = req.params;
+        const result = await bookingCollection.find({ userEmail: email }).toArray();
+        res.send(result);
+    } catch (error) {
+        console.error("Error fetching studios:", error);
+        res.status(500).send({ message: "Failed to fetch studios", error: error.message });
+    }
+})
+
 app.post("/booking", async (req, res) => {
     const data = req.body
     try {
         if (!data || Object.keys(data).length === 0) {
             return res.status(400).send({ message: "Request body cannot be empty" });
+        }
+        const existingBooking = await bookingCollection.findOne({
+            studioId,
+            bookingDate,
+            status: "Confirmed",
+            startTime: { $lt: endTime },
+            endTime: { $gt: startTime },
+        });
+        if (existingBooking) {
+            return res.status(409).send({
+                message: "This studio is already booked for the selected time.",
+            });
         }
         const result = await bookingCollection.insertOne(data);
         // console.log(result);
