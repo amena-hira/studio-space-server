@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { MongoClient, ObjectId } from "mongodb";
 import "dotenv/config";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 const app = express();
 app.use(cors());
@@ -10,6 +11,7 @@ const PORT = 8000;
 
 const DB_USER = encodeURIComponent(process.env.DB_USER || "");
 const DB_PASSWORD = encodeURIComponent(process.env.DB_PASSWORD || "");
+const BASE_URL = process.env.BASE_URL
 
 const client = new MongoClient(`mongodb+srv://${DB_USER}:${DB_PASSWORD}@cluster0.nvjlqis.mongodb.net/`);
 
@@ -34,9 +36,29 @@ app.get("/", (req, res) => {
     res.send("Hello from the server!");
 });
 
+// verify token
+const verifyToken = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: "Unauthorized access" });
+    }
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(401).send({ message: "Unauthorized access" });
+    }
+    const JWKS = createRemoteJWKSet(new URL(`${BASE_URL}/api/auth/jwks`));
+    try {
+        const { payload } = await jwtVerify(token, JWKS);
+        next();
+    } catch (err) {
+        console.error("JWT verification error:", err);
+        return res.status(401).send({ message: "Unauthorized access" });
+    }
+}
+
 // bookings
 
-app.get("/bookings/user/:email", async (req, res) => {
+app.get("/bookings/user/:email", verifyToken, async (req, res) => {
     try {
         const { email } = req.params;
         const result = await bookingCollection.find({ userEmail: email })
@@ -48,7 +70,7 @@ app.get("/bookings/user/:email", async (req, res) => {
     }
 })
 
-app.patch("/bookings/:id", async (req, res) => {
+app.patch("/bookings/:id", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -88,18 +110,18 @@ app.patch("/bookings/:id", async (req, res) => {
     }
 });
 
-app.post("/bookings", async (req, res) => {
+app.post("/bookings", verifyToken, async (req, res) => {
     const data = req.body
     try {
         if (!data || Object.keys(data).length === 0) {
             return res.status(400).send({ message: "Request body cannot be empty" });
         }
         const existingBooking = await bookingCollection.findOne({
-            studioId,
-            bookingDate,
+            studioId:data.studioId,
+            bookingDate:data.bookingDate,
             status: "Confirmed",
-            startTime: { $lt: endTime },
-            endTime: { $gt: startTime },
+            startTime: { $lt: data.endTime },
+            endTime: { $gt: data.startTime },
         });
         if (existingBooking) {
             return res.status(409).send({
@@ -149,7 +171,7 @@ app.get("/studios/:id", async (req, res) => {
     }
 })
 
-app.get("/studios/user/:email", async (req, res) => {
+app.get("/studios/user/:email", verifyToken, async (req, res) => {
     try {
         const { email } = req.params;
         const result = await studioCollection.find({ userEmail: email }).toArray();
@@ -160,7 +182,7 @@ app.get("/studios/user/:email", async (req, res) => {
     }
 })
 
-app.post("/studios", async (req, res) => {
+app.post("/studios", verifyToken, async (req, res) => {
     const data = req.body
     try {
         if (!data || Object.keys(data).length === 0) {
@@ -177,7 +199,7 @@ app.post("/studios", async (req, res) => {
 
 })
 
-app.patch("/studios/:id", async (req, res) => {
+app.patch("/studios/:id", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
@@ -204,7 +226,7 @@ app.patch("/studios/:id", async (req, res) => {
     }
 })
 
-app.delete("/studio/:id", async (req, res) => {
+app.delete("/studio/:id", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
 
