@@ -226,7 +226,7 @@ app.patch("/studios/:id", verifyToken, async (req, res) => {
     }
 })
 
-app.delete("/studio/:id", verifyToken, async (req, res) => {
+app.delete("/studios/:id", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
 
