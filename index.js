@@ -55,6 +55,7 @@ app.get("/studios", async (req, res) => {
 
 app.get("/studios/:id", async (req, res) => {
     const { id } = req.params
+    console.log(id)
     try {
         const studio = await studioCollection.findOne({ _id: new ObjectId(id) })
         res.json(studio);
@@ -64,6 +65,33 @@ app.get("/studios/:id", async (req, res) => {
     }
 })
 
+app.get("/studios/:email", async (req, res) => {
+    try {
+        const { email } = req.params;
+        const result = await studioCollection.find({ email }).toArray();
+        res.send(result);
+    } catch (error) {
+        console.error("Error fetching studios:", error);
+        res.status(500).send({ message: "Failed to fetch studios", error: error.message });
+    }
+})
+
+app.post("/studios", async (req, res) => {
+    const data = req.body
+    try {
+        if (!data || Object.keys(data).length === 0) {
+            return res.status(400).send({ message: "Request body cannot be empty" });
+        }
+        const result = await studioCollection.insertOne(data);
+        // console.log(result);
+        res.send(result);
+        
+    } catch (error) {
+        console.error("Error inserting destination:", error);
+        res.status(500).send({ message: "Failed to insert destination", error: error.message });
+    }
+
+})
 
 
 app.get("/categories", async (req, res) => {
