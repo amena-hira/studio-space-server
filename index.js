@@ -93,6 +93,33 @@ app.post("/studios", async (req, res) => {
 
 })
 
+app.patch("/studios",async(req,res)=>{
+    try {
+        const { id } = req.params;
+        const data = req.body;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).send({ message: "Invalid studio id" });
+        }
+        if (!data || Object.keys(data).length === 0) {
+            return res.status(400).send({ message: "Request body cannot be empty" });
+        }
+
+        const filter = { _id: new ObjectId(id) };
+        const result = await studioCollection.updateOne(filter, { $set: data });
+
+        if (result.matchedCount === 0) {
+            return res.status(404).send({ message: "Studio not found" });
+        }
+
+        const studio = await studioCollection.findOne(filter);
+        res.send(studio);
+    } catch (error) {
+        console.error("Error updating studio:", error);
+        res.status(500).send({ message: "Failed to update studio", error: error.message });
+    }
+})
+
 
 app.get("/categories", async (req, res) => {
     try {
