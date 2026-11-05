@@ -34,10 +34,11 @@ app.get("/", (req, res) => {
     res.send("Hello from the server!");
 });
 
-app.get("/bookings/:email", async (req, res) => {
+app.get("/bookings/user/:email", async (req, res) => {
     try {
         const { email } = req.params;
-        const result = await bookingCollection.find({ userEmail: email }).toArray();
+        const result = await bookingCollection.find({ userEmail: email })
+            .sort({ createdAt: -1 }).toArray();
         res.send(result);
     } catch (error) {
         console.error("Error fetching studios:", error);
@@ -45,7 +46,28 @@ app.get("/bookings/:email", async (req, res) => {
     }
 })
 
-app.post("/booking", async (req, res) => {
+app.delete("/bookings/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).send({ message: "Invalid booking id" });
+        }
+
+        const result = await bookingCollection.deleteOne({ _id: new ObjectId(id) });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).send({ message: "Booking not found" });
+        }
+
+        res.send({ acknowledged: true, deletedId: id });
+    } catch (error) {
+        console.error("Error deleting booking:", error);
+        res.status(500).send({ message: "Failed to delete booking", error: error.message });
+    }
+})
+
+app.post("/bookings", async (req, res) => {
     const data = req.body
     try {
         if (!data || Object.keys(data).length === 0) {
