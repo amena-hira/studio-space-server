@@ -34,6 +34,8 @@ app.get("/", (req, res) => {
     res.send("Hello from the server!");
 });
 
+// bookings
+
 app.get("/bookings/user/:email", async (req, res) => {
     try {
         const { email } = req.params;
@@ -46,7 +48,7 @@ app.get("/bookings/user/:email", async (req, res) => {
     }
 })
 
-app.delete("/bookings/:id", async (req, res) => {
+app.patch("/bookings/:id", async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -54,18 +56,37 @@ app.delete("/bookings/:id", async (req, res) => {
             return res.status(400).send({ message: "Invalid booking id" });
         }
 
-        const result = await bookingCollection.deleteOne({ _id: new ObjectId(id) });
+        const filter = {
+            _id: new ObjectId(id),
+            status: { $nin: ["cancelled", "completed"] },
+        };
 
-        if (result.deletedCount === 0) {
-            return res.status(404).send({ message: "Booking not found" });
+        const result = await bookingCollection.updateOne(filter, {
+            $set: { status: "cancelled" },
+        });
+
+        if (result.matchedCount === 0) {
+            return res.status(404).send({
+                message: "Booking not found or cannot be cancelled",
+            });
         }
 
-        res.send({ acknowledged: true, deletedId: id });
+        const booking = await bookingCollection.findOne({
+            _id: new ObjectId(id),
+        });
+
+        res.send({
+            message: "Booking cancelled successfully",
+            booking,
+        });
     } catch (error) {
-        console.error("Error deleting booking:", error);
-        res.status(500).send({ message: "Failed to delete booking", error: error.message });
+        console.error("Error cancelling booking:", error);
+
+        res.status(500).send({
+            message: "Failed to cancel booking",
+        });
     }
-})
+});
 
 app.post("/bookings", async (req, res) => {
     const data = req.body
@@ -94,6 +115,8 @@ app.post("/bookings", async (req, res) => {
         res.status(500).send({ message: "Failed to insert booking", error: error.message });
     }
 })
+
+// studios
 
 app.get("/studios/top-rated", async (req, res) => {
     try {
@@ -202,6 +225,7 @@ app.delete("/studio/:id", async (req, res) => {
     }
 })
 
+// categories
 
 app.get("/categories", async (req, res) => {
     try {
