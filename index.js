@@ -55,20 +55,19 @@ app.get("/studios", async (req, res) => {
 
 app.get("/studios/:id", async (req, res) => {
     const { id } = req.params
-    console.log(id)
     try {
         const studio = await studioCollection.findOne({ _id: new ObjectId(id) })
         res.json(studio);
     } catch (err) {
-        console.error(err)
+        console.log(err)
         res.status(500).json({ error: "An error occurred while fetching studios." });
     }
 })
 
-app.get("/studios/:email", async (req, res) => {
+app.get("/studios/user/:email", async (req, res) => {
     try {
         const { email } = req.params;
-        const result = await studioCollection.find({ email }).toArray();
+        const result = await studioCollection.find({ userEmail: email }).toArray();
         res.send(result);
     } catch (error) {
         console.error("Error fetching studios:", error);
@@ -85,7 +84,7 @@ app.post("/studios", async (req, res) => {
         const result = await studioCollection.insertOne(data);
         // console.log(result);
         res.send(result);
-        
+
     } catch (error) {
         console.error("Error inserting destination:", error);
         res.status(500).send({ message: "Failed to insert destination", error: error.message });
@@ -93,7 +92,7 @@ app.post("/studios", async (req, res) => {
 
 })
 
-app.patch("/studios",async(req,res)=>{
+app.patch("/studios/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
@@ -117,6 +116,27 @@ app.patch("/studios",async(req,res)=>{
     } catch (error) {
         console.error("Error updating studio:", error);
         res.status(500).send({ message: "Failed to update studio", error: error.message });
+    }
+})
+
+app.delete("/studio/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).send({ message: "Invalid studio id" });
+        }
+
+        const result = await studioCollection.deleteOne({ _id: new ObjectId(id) });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).send({ message: "Studio not found" });
+        }
+
+        res.send({ acknowledged: true, deletedId: id });
+    } catch (error) {
+        console.error("Error deleting studio:", error);
+        res.status(500).send({ message: "Failed to delete studio", error: error.message });
     }
 })
 
